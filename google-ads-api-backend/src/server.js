@@ -7,7 +7,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
 const logger = require('./infrastructure/logger');
-const errorHandler = require('./middlewares/errorHandler');
+const { errorHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const campaignsRoutes = require('./routes/campaignsRoutes');
 const metricsRoutes = require('./routes/metricsRoutes');
@@ -86,9 +86,9 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const server = app.listen(PORT, () => {
-  logger.info(`íº€ Servidor rodando na porta ${PORT}`);
-  logger.info(`í³Š Environment: ${process.env.NODE_ENV}`);
-  logger.info(`í´— Health check: http://localhost:${PORT}/health`);
+  logger.info(`ï¿½ï¿½ï¿½ Servidor rodando na porta ${PORT}`);
+  logger.info(`ï¿½ï¿½ï¿½ Environment: ${process.env.NODE_ENV}`);
+  logger.info(`ï¿½ï¿½ï¿½ Health check: http://localhost:${PORT}/health`);
 });
 
 module.exports = { app, server };

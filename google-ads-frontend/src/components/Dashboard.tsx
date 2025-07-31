@@ -35,6 +35,7 @@ import {
   campaignsService, 
   metricsService 
 } from '@/lib/api';
+import DemoDashboard from './DemoDashboard';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -50,6 +51,11 @@ export default function Dashboard() {
     // Verificar se existe token de autenticação
     const token = localStorage.getItem('google_ads_token');
     setIsAuthenticated(!!token);
+    
+    // Se for token de demonstração, mostrar dashboard demo
+    if (token === 'demo_token') {
+      return;
+    }
     
     // Carregar customerId salvo
     const savedCustomerId = localStorage.getItem('google_ads_customer_id');
@@ -128,6 +134,12 @@ export default function Dashboard() {
     name: status,
     value: count
   }));
+
+  // Se for token de demonstração, mostrar dashboard demo
+  const token = localStorage.getItem('google_ads_token');
+  if (token === 'demo_token') {
+    return <DemoDashboard />;
+  }
 
   if (!isAuthenticated) {
     return (

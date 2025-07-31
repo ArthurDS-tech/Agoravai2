@@ -29,8 +29,8 @@ const limiter = rateLimit({
 app.use(helmet());
 app.use(compression());
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 
-    ['https://yourdomain.com'] : 
+  origin: process.env.ALLOWED_ORIGINS ? 
+    process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim()) : 
     ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true
 }));

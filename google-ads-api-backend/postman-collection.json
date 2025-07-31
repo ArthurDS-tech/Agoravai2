@@ -1,0 +1,79 @@
+{
+  "info": {
+    "name": "Google Ads API Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/"
+  },
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "customerId",
+      "value": "1234567890"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseURL}}/health"
+      }
+    },
+    {
+      "name": "Auth - Get URL",
+      "request": {
+        "method": "GET",
+        "url": "{{baseURL}}/api/auth/url?customerId={{customerId}}"
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "url": "{{baseURL}}/api/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"1//04xxx\",\n  \"customerId\": \"{{customerId}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Campaigns - List",
+      "request": {
+        "method": "GET",
+        "url": "{{baseURL}}/api/campaigns/{{customerId}}?limit=20",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Metrics - Summary",
+      "request": {
+        "method": "GET",
+        "url": "{{baseURL}}/api/metrics/{{customerId}}/summary",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    }
+  ]
+}

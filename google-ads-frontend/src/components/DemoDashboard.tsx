@@ -20,14 +20,12 @@ import {
   Line
 } from 'recharts';
 import { 
-  TrendingUp, 
   Eye, 
   MousePointer, 
   DollarSign, 
   Activity,
   RefreshCw,
   AlertCircle,
-  CheckCircle,
   LogOut
 } from 'lucide-react';
 

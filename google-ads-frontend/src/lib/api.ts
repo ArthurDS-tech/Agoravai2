@@ -65,7 +65,7 @@ export interface CampaignsResponse {
     campaigns: Campaign[];
     total: number;
     customerId: string;
-    filters: any;
+    filters: Record<string, unknown>;
   };
   message: string;
 }

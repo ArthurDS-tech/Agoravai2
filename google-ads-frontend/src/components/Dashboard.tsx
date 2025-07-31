@@ -20,14 +20,12 @@ import {
   Cell
 } from 'recharts';
 import { 
-  TrendingUp, 
   Eye, 
   MousePointer, 
   DollarSign, 
   Activity,
   RefreshCw,
-  AlertCircle,
-  CheckCircle
+  AlertCircle
 } from 'lucide-react';
 import { 
   Campaign, 
@@ -85,8 +83,11 @@ export default function Dashboard() {
 
       setCampaigns(campaignsResponse.data.campaigns);
       setMetrics(metricsResponse.data.summary);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao buscar dados. Verifique sua autenticação.');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Erro ao buscar dados. Verifique sua autenticação.';
+      setError(errorMessage || 'Erro ao buscar dados. Verifique sua autenticação.');
     } finally {
       setLoading(false);
     }
@@ -393,7 +394,7 @@ export default function Dashboard() {
                 Nenhum dado encontrado
               </h3>
               <p className="text-gray-600 mb-4">
-                Insira seu Customer ID e clique em "Buscar Dados" para começar
+                Insira seu Customer ID e clique em &quot;Buscar Dados&quot; para começar
               </p>
             </CardContent>
           </Card>

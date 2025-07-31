@@ -40,10 +40,11 @@ export default function AuthPage() {
     if (savedCustomerId) {
       setCustomerId(savedCustomerId);
     }
-  }, [searchParams]);
+  }, [searchParams, handleOAuthCallback]);
 
   const handleOAuthCallback = async (code: string, state: string | null) => {
     try {
+      console.log('Processing OAuth callback with code:', code, 'and state:', state);
       // Simular processamento do callback
       // Na implementação real, o backend já processaria isso
       setSuccess('Autenticação realizada com sucesso!');
@@ -55,7 +56,8 @@ export default function AuthPage() {
       setTimeout(() => {
         router.push('/');
       }, 2000);
-    } catch (err) {
+    } catch (error) {
+      console.error('OAuth callback error:', error);
       setError('Erro ao processar autenticação. Tente novamente.');
     }
   };
@@ -77,8 +79,11 @@ export default function AuthPage() {
       
       // Salvar customerId
       localStorage.setItem('google_ads_customer_id', customerId);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao gerar URL de autenticação');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Erro ao gerar URL de autenticação';
+      setError(errorMessage || 'Erro ao gerar URL de autenticação');
     } finally {
       setLoading(false);
     }

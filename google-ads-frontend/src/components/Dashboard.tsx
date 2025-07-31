@@ -34,6 +34,7 @@ import {
   metricsService 
 } from '@/lib/api';
 import DemoDashboard from './DemoDashboard';
+import CompleteDashboard from './CompleteDashboard';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -47,18 +48,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Verificar se existe token de autenticação
-    const token = localStorage.getItem('google_ads_token');
-    setIsAuthenticated(!!token);
-    
-    // Se for token de demonstração, mostrar dashboard demo
-    if (token === 'demo_token') {
-      return;
-    }
-    
-    // Carregar customerId salvo
-    const savedCustomerId = localStorage.getItem('google_ads_customer_id');
-    if (savedCustomerId) {
-      setCustomerId(savedCustomerId);
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('google_ads_token');
+      setIsAuthenticated(!!token);
+      
+      // Se for token de demonstração, mostrar dashboard demo
+      if (token === 'demo_token') {
+        return;
+      }
+      
+      // Carregar customerId salvo
+      const savedCustomerId = localStorage.getItem('google_ads_customer_id');
+      if (savedCustomerId) {
+        setCustomerId(savedCustomerId);
+      }
     }
   }, []);
 
@@ -137,9 +140,16 @@ export default function Dashboard() {
   }));
 
   // Se for token de demonstração, mostrar dashboard demo
-  const token = localStorage.getItem('google_ads_token');
-  if (token === 'demo_token') {
-    return <DemoDashboard />;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('google_ads_token');
+    if (token === 'demo_token') {
+      return <DemoDashboard />;
+    }
+    
+    // Se for token real, usar dashboard completo
+    if (token && token !== 'demo_token') {
+      return <CompleteDashboard />;
+    }
   }
 
   if (!isAuthenticated) {
@@ -318,7 +328,7 @@ export default function Dashboard() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"

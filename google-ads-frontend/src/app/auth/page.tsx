@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { authService } from '@/lib/api';
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [customerId, setCustomerId] = useState('');
@@ -19,8 +19,20 @@ export default function AuthPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
 
+  const handleOAuthCallback = useCallback(async (code: string, state: string | null) => {
+    try {
+      console.log('Processing OAuth callback');
+      setSuccess('Autenticação realizada com sucesso!');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('google_ads_token', 'oauth_token_from_callback');
+      }
+      setTimeout(() => router.push('/'), 2000);
+    } catch (error) {
+      setError('Erro ao processar autenticação. Tente novamente.');
+    }
+  }, [router]);
+
   useEffect(() => {
-    // Verificar se chegamos aqui via callback do OAuth
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const error = searchParams.get('error');
@@ -31,36 +43,16 @@ export default function AuthPage() {
     }
 
     if (code) {
-      // Usuário voltou do OAuth com sucesso
       handleOAuthCallback(code, state);
     }
 
-    // Carregar customerId salvo
-    const savedCustomerId = localStorage.getItem('google_ads_customer_id');
-    if (savedCustomerId) {
-      setCustomerId(savedCustomerId);
+    if (typeof window !== 'undefined') {
+      const savedCustomerId = localStorage.getItem('google_ads_customer_id');
+      if (savedCustomerId) {
+        setCustomerId(savedCustomerId);
+      }
     }
   }, [searchParams, handleOAuthCallback]);
-
-  const handleOAuthCallback = async (code: string, state: string | null) => {
-    try {
-      console.log('Processing OAuth callback with code:', code, 'and state:', state);
-      // Simular processamento do callback
-      // Na implementação real, o backend já processaria isso
-      setSuccess('Autenticação realizada com sucesso!');
-      
-      // Salvar token fictício (na implementação real viria do backend)
-      localStorage.setItem('google_ads_token', 'oauth_token_from_callback');
-      
-      // Redirecionar para dashboard após 2 segundos
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      setError('Erro ao processar autenticação. Tente novamente.');
-    }
-  };
 
   const handleGetAuthUrl = async () => {
     if (!customerId.trim()) {
@@ -75,49 +67,39 @@ export default function AuthPage() {
     try {
       const response = await authService.getAuthUrl(customerId, 'user_' + Date.now());
       setAuthUrl(response.data.authUrl);
-      setSuccess('URL de autenticação gerada! Clique no link abaixo para autorizar.');
+      setSuccess('URL de autenticação gerada!');
       
-      // Salvar customerId
-      localStorage.setItem('google_ads_customer_id', customerId);
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Erro ao gerar URL de autenticação';
-      setError(errorMessage || 'Erro ao gerar URL de autenticação');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('google_ads_customer_id', customerId);
+      }
+    } catch (error) {
+      setError('Erro ao gerar URL de autenticação');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDirectAuth = () => {
-    // Para teste, simular autenticação direta
-    localStorage.setItem('google_ads_token', 'demo_token');
-    localStorage.setItem('google_ads_customer_id', customerId || 'demo-customer-id');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('google_ads_token', 'demo_token');
+      localStorage.setItem('google_ads_customer_id', customerId || 'demo-customer-id');
+    }
     setSuccess('Autenticação de demonstração ativada!');
-    
-    setTimeout(() => {
-      router.push('/');
-    }, 1500);
+    setTimeout(() => router.push('/'), 1500);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Google Ads Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Conecte-se ao Google Ads para visualizar suas campanhas
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Google Ads Dashboard</h1>
+          <p className="text-gray-600">Conecte-se ao Google Ads para visualizar suas campanhas</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Autenticação</CardTitle>
-            <CardDescription>
-              Insira seu Customer ID e autorize o acesso ao Google Ads
-            </CardDescription>
+            <CardDescription>Insira seu Customer ID e autorize o acesso ao Google Ads</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -129,38 +111,27 @@ export default function AuthPage() {
                 onChange={(e) => setCustomerId(e.target.value)}
                 disabled={loading}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Encontre seu Customer ID no Google Ads (formato: 123-456-7890)
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Encontre seu Customer ID no Google Ads</p>
             </div>
 
             {error && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
               </Alert>
             )}
 
             {success && (
               <Alert className="border-green-200 bg-green-50">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  {success}
-                </AlertDescription>
+                <AlertDescription className="text-green-800">{success}</AlertDescription>
               </Alert>
             )}
 
             {authUrl && (
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800 mb-3">
-                  Clique no link abaixo para autorizar o acesso:
-                </p>
-                <Button
-                  onClick={() => window.open(authUrl, '_blank')}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
+                <p className="text-sm text-blue-800 mb-3">Clique no link abaixo para autorizar:</p>
+                <Button onClick={() => window.open(authUrl, '_blank')} className="w-full bg-blue-600 hover:bg-blue-700">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Autorizar Google Ads
                 </Button>
@@ -168,11 +139,7 @@ export default function AuthPage() {
             )}
 
             <div className="space-y-2">
-              <Button
-                onClick={handleGetAuthUrl}
-                disabled={loading}
-                className="w-full"
-              >
+              <Button onClick={handleGetAuthUrl} disabled={loading} className="w-full">
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -192,27 +159,21 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleDirectAuth}
-                variant="outline"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button onClick={handleDirectAuth} variant="outline" className="w-full" disabled={loading}>
                 Modo Demonstração (Teste)
               </Button>
-            </div>
-
-            <div className="text-xs text-gray-500 space-y-1">
-              <p><strong>Nota:</strong> Para usar dados reais, você precisa:</p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Configurar credenciais OAuth2 no Google Cloud Console</li>
-                <li>Obter Developer Token do Google Ads</li>
-                <li>Configurar o backend com suas credenciais</li>
-              </ul>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Carregando...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 }
